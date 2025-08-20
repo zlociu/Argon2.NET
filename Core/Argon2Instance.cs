@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using static System.Reflection.Metadata.BlobBuilder;
 using System.Numerics;
+using System.Runtime.Intrinsics.X86;
 
 namespace Argon2.Core;
 
@@ -93,7 +94,14 @@ internal class Argon2Instance
                         index = 0
                     };
 
-                    Ref.FillSegment(this, position);
+                    if (Avx2.IsSupported)
+                    {
+                        Opt.FillSegment(this, position);
+                    }
+                    else
+                    {
+                        Ref.FillSegment(this, position);
+                    }
                 }
             }
         }
@@ -122,7 +130,14 @@ internal class Argon2Instance
                     position.slice = (byte)s;
                     position.index = 0;
 
-                    Ref.FillSegment(this, position);
+                    if (Avx2.IsSupported)
+                    {
+                        Opt.FillSegment(this, position);
+                    }
+                    else
+                    {
+                        Ref.FillSegment(this, position);
+                    }
                 });
             }
         }

@@ -257,9 +257,9 @@ public class Blake2b// : IBlake2b
         return 0;
     }
     
-    private static int blake2b(byte[] _out, long outlen, in byte[] _in, long inlen, in byte[] key, long keylen)
+    private static int Blake2bInternal(byte[] _out, long outlen, in byte[] _in, long inlen, in byte[] key, long keylen)
     {
-        Blake2b state = new();
+        Blake2b state = new(); // has to be other instance
 
         int ret = -1;
 
@@ -330,7 +330,7 @@ public class Blake2b// : IBlake2b
             {
                 Array.Copy(out_buffer, in_buffer, Blake2Consts.BLAKE2B_OUTBYTES);
                 
-                if (blake2b(
+                if (Blake2bInternal(
                     out_buffer,
                     Blake2Consts.BLAKE2B_OUTBYTES,
                     in_buffer,
@@ -346,7 +346,7 @@ public class Blake2b// : IBlake2b
 
             Array.Copy(out_buffer, in_buffer, Blake2Consts.BLAKE2B_OUTBYTES);
             
-            if (blake2b(out_buffer, toproduce, in_buffer, Blake2Consts.BLAKE2B_OUTBYTES, null, 0) < 0) return -1;
+            if (Blake2bInternal(out_buffer, toproduce, in_buffer, Blake2Consts.BLAKE2B_OUTBYTES, null, 0) < 0) return -1;
 
             Array.Copy(out_buffer, 0, _out, outIdx, toproduce);
         }

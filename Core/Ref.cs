@@ -1,9 +1,8 @@
+namespace Argon2;
+
 using Argon2.Blake2;
 using Argon2.Core;
 using Argon2.Enums;
-using System.Diagnostics.CodeAnalysis;
-
-namespace Argon2;
 
 internal class Ref
 {

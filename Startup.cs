@@ -66,15 +66,15 @@ void Run(
     Console.Write("Hash:\t\t");
     Helpers.PrintHex(context.Out);
 
-    Console.Write("Encoded:\t{0}\n", encoded);
+    Console.WriteLine("Encoded:\t{0}", encoded);
 
-    Console.Write("%{0:F3} seconds\n", s1.ElapsedMilliseconds / 1000);
+    Console.WriteLine("%{0:F3} seconds", s1.ElapsedMilliseconds / 1000);
     
     result = Argon2.Core.Argon2.Argon2Verify(encoded, System.Text.Encoding.UTF8.GetBytes(pwd), type);
     if (result != Argon2_ErrorCodes.ARGON2_OK)
         Console.WriteLine(result.GetErrorMessage());
     
-    Console.Write("Verification ok\n");
+    Console.WriteLine("Verification OK");
 }
 
 int outlen = 32;
@@ -279,10 +279,10 @@ if (encoded_only && raw_only)
 
 if (!encoded_only && !raw_only)
 {
-    Console.Write("Type:\t\t{0}\n", type.Argon2Type2string(true));
-    Console.Write("Iterations:\t{0}\n", t_cost);
-    Console.Write("Memory:\t\t{0} KiB\n", m_cost);
-    Console.Write("Parallelism:\t{0}\n", threads);
+    Console.WriteLine("Type:\t\t{0}", type.Argon2Type2string(true));
+    Console.WriteLine("Iterations:\t{0}", t_cost);
+    Console.WriteLine("Memory:\t\t{0} KiB", m_cost);
+    Console.WriteLine("Parallelism:\t{0}", threads);
 }
 
 Run(outlen, pwd, salt, t_cost, m_cost, threads, type, encoded_only, raw_only, version);

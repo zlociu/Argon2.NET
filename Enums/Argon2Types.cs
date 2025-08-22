@@ -8,7 +8,7 @@ public enum Argon2Type
     ID = 2
 }
 
-public static class Argon2Typecs_Extensions
+public static class Argon2Type_Extensions
 {
     public static string Argon2Type2string(this Argon2Type type, bool uppercase)
     {

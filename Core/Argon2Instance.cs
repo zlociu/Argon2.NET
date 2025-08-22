@@ -1,9 +1,5 @@
 ﻿using Argon2.Blake2;
 using Argon2.Enums;
-using System;
-using System.Collections.Generic;
-using static System.Reflection.Metadata.BlobBuilder;
-using System.Numerics;
 using System.Runtime.Intrinsics.X86;
 
 namespace Argon2.Core;
@@ -30,23 +26,23 @@ internal class Argon2Instance
         uint memory_blocks, segment_length;
 
         // Minimum memory_blocks = 8L blocks, where L is the number of lanes //
-        memory_blocks = context.m_cost;
+        memory_blocks = context.MCost;
 
-        if (memory_blocks < 2 * Consts.ARGON2_SYNC_POINTS * context.lanes)
-            memory_blocks = 2 * Consts.ARGON2_SYNC_POINTS * context.lanes;
+        if (memory_blocks < 2 * Consts.ARGON2_SYNC_POINTS * context.Lanes)
+            memory_blocks = 2 * Consts.ARGON2_SYNC_POINTS * context.Lanes;
 
-        segment_length = memory_blocks / (context.lanes * Consts.ARGON2_SYNC_POINTS);
+        segment_length = memory_blocks / (context.Lanes * Consts.ARGON2_SYNC_POINTS);
         // Ensure that all segments have equal length //
-        memory_blocks = segment_length * (context.lanes * Consts.ARGON2_SYNC_POINTS);
+        memory_blocks = segment_length * (context.Lanes * Consts.ARGON2_SYNC_POINTS);
 
-        this.version = context.version;
+        this.version = context.Version;
         this.memory = [];
-        this.passes = context.t_cost;
+        this.passes = context.TCost;
         this.memory_blocks = memory_blocks;
         this.segment_length = segment_length;
         this.lane_length = segment_length * Consts.ARGON2_SYNC_POINTS;
-        this.lanes = context.lanes;
-        this.threads = context.threads;
+        this.lanes = context.Lanes;
+        this.threads = context.Threads;
         this.type = type;
         this.context_ptr = context;
 
@@ -71,7 +67,7 @@ internal class Argon2Instance
         /* Hash the result */
         {
             byte[] blockhash_bytes = blockhash.StoreBlock();
-            Blake2b.Blake2bLong(this.context_ptr._out, this.context_ptr._out.LongLength, blockhash_bytes);
+            Blake2b.Blake2bLong(this.context_ptr.Out, this.context_ptr.Out.LongLength, blockhash_bytes);
         }
     }
 
@@ -315,60 +311,60 @@ internal class Argon2Instance
 
         blakeHash.Blake2bInit(Consts.ARGON2_PREHASH_DIGEST_LENGTH);
 
-        value = Blake2Impl.store32(context.lanes);
+        value = BitConverter.GetBytes(context.Lanes);
         blakeHash.Blake2bUpdate(value);
 
-        value = Blake2Impl.store32((uint)context._out.Length);
+        value = BitConverter.GetBytes((uint)context.Out.Length);
         blakeHash.Blake2bUpdate(value);
 
-        value = Blake2Impl.store32(context.m_cost);
+        value = BitConverter.GetBytes(context.MCost);
         blakeHash.Blake2bUpdate(value);
 
-        value = Blake2Impl.store32(context.t_cost);
+        value = BitConverter.GetBytes(context.TCost);
         blakeHash.Blake2bUpdate(value);
 
-        value = Blake2Impl.store32((uint)context.version);
+        value = BitConverter.GetBytes((uint)context.Version);
         blakeHash.Blake2bUpdate(value);
 
-        value = Blake2Impl.store32((uint)type);
+        value = BitConverter.GetBytes((uint)type);
         blakeHash.Blake2bUpdate(value);
 
-        value = Blake2Impl.store32((uint)context.pwd.Length);
+        value = BitConverter.GetBytes((uint)context.Pwd.Length);
         blakeHash.Blake2bUpdate(value);
 
-        if (context.pwd is not null && context.pwd.Length > 0)
+        if (context.Pwd is not null && context.Pwd.Length > 0)
         {
-            blakeHash.Blake2bUpdate(context.pwd);
+            blakeHash.Blake2bUpdate(context.Pwd);
 
-            if ((context.flags & Consts.ARGON2_FLAG_CLEAR_PASSWORD) > 0)
-                context.pwd = [];
+            if ((context.Flags & Consts.ARGON2_FLAG_CLEAR_PASSWORD) > 0)
+                context.Pwd = [];
         }
 
-        value = Blake2Impl.store32((uint)context.salt.Length);
+        value = BitConverter.GetBytes((uint)context.Salt.Length);
         blakeHash.Blake2bUpdate(value);
 
-        if (context.salt is not null && context.salt.Length > 0)
+        if (context.Salt is not null && context.Salt.Length > 0)
         {
-            blakeHash.Blake2bUpdate(context.salt);
+            blakeHash.Blake2bUpdate(context.Salt);
         }
 
-        value = Blake2Impl.store32((uint)context.secret.Length);
+        value = BitConverter.GetBytes((uint)context.Secret.Length);
         blakeHash.Blake2bUpdate(value);
 
-        if (context.secret is not null && context.secret.Length > 0)
+        if (context.Secret is not null && context.Secret.Length > 0)
         {
-            blakeHash.Blake2bUpdate(context.secret);
+            blakeHash.Blake2bUpdate(context.Secret);
 
-            if ((context.flags & Consts.ARGON2_FLAG_CLEAR_SECRET) > 0)
-                context.secret = [];
+            if ((context.Flags & Consts.ARGON2_FLAG_CLEAR_SECRET) > 0)
+                context.Secret = [];
         }
 
-        value = Blake2Impl.store32((uint)context.ad.Length);
+        value = BitConverter.GetBytes((uint)context.Ad.Length);
         blakeHash.Blake2bUpdate(value);
 
-        if (context.ad is not null && context.ad.Length > 0)
+        if (context.Ad is not null && context.Ad.Length > 0)
         {
-            blakeHash.Blake2bUpdate(context.ad);
+            blakeHash.Blake2bUpdate(context.Ad);
         }
 
         blakeHash.Blake2bFinal(blockhash, Consts.ARGON2_PREHASH_DIGEST_LENGTH);

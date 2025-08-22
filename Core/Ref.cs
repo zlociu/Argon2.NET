@@ -1,10 +1,10 @@
-namespace Argon2;
+namespace Argon2.Core;
 
-using Argon2.Blake2;
-using Argon2.Core;
-using Argon2.Enums;
+using Blake2;
+using Enums;
+using Interfaces;
 
-internal class Ref
+internal class Ref : IFillSegment
 {
     /// <summary>
     /// Function fills a new memory block and optionally XORs the old block over the new one.

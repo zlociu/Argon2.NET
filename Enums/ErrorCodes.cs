@@ -1,6 +1,4 @@
-﻿using Argon2.Core;
-
-namespace Argon2.Enums;
+﻿namespace Argon2.Enums;
 
 public enum Argon2_ErrorCodes
 {

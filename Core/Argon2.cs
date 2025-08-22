@@ -1,134 +1,7 @@
 namespace Argon2.Core;
 
-using global::Argon2.Enums;
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
+using Enums;
 
-/*
- * Context: structure to hold Argon2 inputs:
- *  output array and its length,
- *  password and its length,
- *  salt and its length,
- *  secret and its length,
- *  associated data and its length,
- *  number of passes, amount of used memory (in KBytes, can be rounded up a bit)
- *  number of parallel threads that will be run.
- * All the parameters above affect the output hash value.
- */
-public class Argon2Context
-{
-    public byte[] _out;    // output array //
- 
-    public byte[] pwd;    // password array //
-
-    public byte[] salt;    // salt array //
-
-    public byte[] secret;    // key array //
-
-    public byte[] ad;    // associated data array //
- 
-    public uint t_cost;  // number of passes //
-    public uint m_cost;  // amount of memory requested (KB) //
-    public uint lanes;   // number of lanes //
-    public uint threads; // maximum number of threads //
-
-    public Argon2Version version; // version number //
-
-    public uint flags; // array of bool options //
-
-
-    /// <summary>
-    /// Function that validates all inputs against predefined restrictions and return an error code
-    /// </summary>
-    /// <returns>ARGON2_OK if everything is all right, otherwise one of error codes </returns>
-    public Argon2_ErrorCodes ValidateInputs()
-    {
-        if (this._out.Length == 0)
-            return Argon2_ErrorCodes.ARGON2_OUTPUT_PTR_NULL;
-
-        // Validate output length //
-        if (Consts.ARGON2_MIN_OUTLEN > this._out.LongLength)
-            return Argon2_ErrorCodes.ARGON2_OUTPUT_TOO_SHORT;
-
-        if (Consts.ARGON2_MAX_OUTLEN < this._out.LongLength)
-            return Argon2_ErrorCodes.ARGON2_OUTPUT_TOO_LONG;
-
-        // Validate password (required param) //
-        if (this.pwd.Length == 0)
-            return Argon2_ErrorCodes.ARGON2_PWD_PTR_MISMATCH;
-
-        if (Consts.ARGON2_MIN_PWD_LENGTH > this.pwd.LongLength)
-            return Argon2_ErrorCodes.ARGON2_PWD_TOO_SHORT;
-
-        if (Consts.ARGON2_MAX_PWD_LENGTH < this.pwd.LongLength)
-            return Argon2_ErrorCodes.ARGON2_PWD_TOO_LONG;
-
-        // Validate salt (required param) //
-        if (this.salt.Length == 0)
-        {
-            return Argon2_ErrorCodes.ARGON2_SALT_PTR_MISMATCH;
-        }
-
-        if (Consts.ARGON2_MIN_SALT_LENGTH > this.salt.LongLength)
-        {
-            return Argon2_ErrorCodes.ARGON2_SALT_TOO_SHORT;
-        }
-
-        if (Consts.ARGON2_MAX_SALT_LENGTH < this.salt.LongLength)
-        {
-            return Argon2_ErrorCodes.ARGON2_SALT_TOO_LONG;
-        }
-
-        // Validate secret (optional param)
-        if (Consts.ARGON2_MIN_SECRET > this.secret.LongLength)
-            return Argon2_ErrorCodes.ARGON2_SECRET_TOO_SHORT;
-
-        if (Consts.ARGON2_MAX_SECRET < this.secret.LongLength)
-            return Argon2_ErrorCodes.ARGON2_SECRET_TOO_LONG;
-
-        // Validate associated data (optional param)
-        if (Consts.ARGON2_MIN_AD_LENGTH > this.ad.LongLength)
-            return Argon2_ErrorCodes.ARGON2_AD_TOO_SHORT;
-            
-        if (Consts.ARGON2_MAX_AD_LENGTH < this.ad.LongLength)
-            return Argon2_ErrorCodes.ARGON2_AD_TOO_LONG;
-
-        // Validate memory cost 
-        if (Consts.ARGON2_MIN_MEMORY > this.m_cost)
-            return Argon2_ErrorCodes.ARGON2_MEMORY_TOO_LITTLE;
-
-        if (Consts.ARGON2_MAX_MEMORY < this.m_cost)
-            return Argon2_ErrorCodes.ARGON2_MEMORY_TOO_MUCH;
-
-        if (this.m_cost < 8 * this.lanes)
-            return Argon2_ErrorCodes.ARGON2_MEMORY_TOO_LITTLE;
-
-        // Validate time cost
-        if (Consts.ARGON2_MIN_TIME > this.t_cost)
-            return Argon2_ErrorCodes.ARGON2_TIME_TOO_SMALL;
-
-        if (Consts.ARGON2_MAX_TIME < this.t_cost)
-            return Argon2_ErrorCodes.ARGON2_TIME_TOO_LARGE;
-
-        // Validate lanes 
-        if (Consts.ARGON2_MIN_LANES > this.lanes)
-            return Argon2_ErrorCodes.ARGON2_LANES_TOO_FEW;
-
-        if (Consts.ARGON2_MAX_LANES < this.lanes)
-            return Argon2_ErrorCodes.ARGON2_LANES_TOO_MANY;
-
-        // Validate threads 
-        if (Consts.ARGON2_MIN_THREADS > this.threads)
-            return Argon2_ErrorCodes.ARGON2_THREADS_TOO_FEW;
-
-        if (Consts.ARGON2_MAX_THREADS < this.threads)
-            return Argon2_ErrorCodes.ARGON2_THREADS_TOO_MANY;
-
-        return Argon2_ErrorCodes.ARGON2_OK;
-    }
-}
 
 /* Version of the algorithm */
 public enum Argon2Version
@@ -173,17 +46,17 @@ public class Argon2
             return Argon2_ErrorCodes.ARGON2_OUTPUT_TOO_SHORT;
         }
 
-        context._out = new byte[hashLen];
-        context.pwd = pwd;
-        context.salt = salt;
-        context.secret = [];
-        context.ad = [];
-        context.t_cost = t_cost;
-        context.m_cost = m_cost;
-        context.lanes = parallelism;
-        context.threads = parallelism;
-        context.flags = Consts.ARGON2_DEFAULT_FLAGS;
-        context.version = version;
+        context.Out = new byte[hashLen];
+        context.Pwd = pwd;
+        context.Salt = salt;
+        context.Secret = [];
+        context.Ad = [];
+        context.TCost = t_cost;
+        context.MCost = m_cost;
+        context.Lanes = parallelism;
+        context.Threads = parallelism;
+        context.Flags = Consts.ARGON2_DEFAULT_FLAGS;
+        context.Version = version;
 
         return Argon2Ctx(context, type);
     }
@@ -200,17 +73,17 @@ public class Argon2
             return Argon2_ErrorCodes.ARGON2_DECODING_FAIL;
 
         // No field can be longer than the encoded length //
-        ctx.pwd = pwd;
+        ctx.Pwd = pwd;
 
         Argon2_ErrorCodes ret = Encoding.DecodeString(encoded, type, ctx);
         if (ret != Argon2_ErrorCodes.ARGON2_OK)
             return ret;
 
         // Set aside the desired result, and get a new buffer. //
-        desired_result = ctx._out;
+        desired_result = ctx.Out;
 
-        var outLen = ctx._out.Length;
-        ctx._out = new byte[outLen];
+        var outLen = ctx.Out.Length;
+        ctx.Out = new byte[outLen];
 
         ret = Argon2Verify_ctx(ctx, desired_result, type);
 
@@ -246,7 +119,7 @@ public class Argon2
         if (ret != Argon2_ErrorCodes.ARGON2_OK)
             return ret;
         
-        if (!Argon2Compare(hash, context._out))
+        if (!Argon2Compare(hash, context.Out))
             return Argon2_ErrorCodes.ARGON2_VERIFY_MISMATCH;
 
         return Argon2_ErrorCodes.ARGON2_OK;

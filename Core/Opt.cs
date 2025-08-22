@@ -1,11 +1,11 @@
-namespace Argon2;
+namespace Argon2.Core;
 
-using Argon2.Core;
-using Argon2.Enums;
+using Enums;
+using Interfaces;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
-internal class Opt
+internal class Opt: IFillSegment
 {
     /// <summary>
     /// Function fills a new memory block and optionally XORs the old block over the new one.
@@ -26,15 +26,16 @@ internal class Opt
         {
             for (int i = 0; i < Consts.ARGON2_HWORDS_IN_BLOCK; i++)
             {
-                state[i] = Avx2.Xor(state[i], Vector256.Create<ulong>(ref_block.V, 4 * i));
-                block_XY[i] = Avx2.Xor(state[i], Vector256.Create<ulong>(next_block.V, 4 * i));
+                state[i] = Avx2.Xor(state[i], Vector256.Create(ref_block.V, 4 * i));
+                block_XY[i] = Avx2.Xor(state[i], Vector256.Create(next_block.V, 4 * i));
             }
         } 
         else
         {
             for (int i = 0; i < Consts.ARGON2_HWORDS_IN_BLOCK; i++)
             {
-                block_XY[i] = state[i] = Avx2.Xor(state[i], Vector256.Create<ulong>(ref_block.V, 4 * i));
+                block_XY[i] =
+                    state[i] = Avx2.Xor(state[i], Vector256.Create(ref_block.V, 4 * i));
             }
         }
 
@@ -63,9 +64,7 @@ internal class Opt
         return newBlock;
     }
 
-    static Block NextAddresses(
-        Block address_block,
-        Block input_block)
+    static Block NextAddresses(Block address_block, Block input_block)
     {
         /*Temporary zero-initialized blocks*/
     

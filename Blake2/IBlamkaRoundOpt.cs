@@ -6,10 +6,10 @@ namespace Argon2.Core;
 
 public class BlamkaOpt
 {
-    private static Vector256<ulong> rotr32(Vector256<ulong> x) => Avx2.Shuffle(x.AsUInt32(), 0b_10_11_00_01).AsUInt64();
-    private static Vector256<ulong> rotr24(Vector256<ulong> x) => Avx2.Shuffle(x.AsByte(), Vector256.Create<byte>([3, 4, 5, 6, 7, 0, 1, 2, 11, 12, 13, 14, 15, 8, 9, 10, 3, 4, 5, 6, 7, 0, 1, 2, 11, 12, 13, 14, 15, 8, 9, 10])).AsUInt64();
-    private static Vector256<ulong> rotr16(Vector256<ulong> x) => Avx2.Shuffle(x.AsByte(), Vector256.Create<byte>([2, 3, 4, 5, 6, 7, 0, 1, 10, 11, 12, 13, 14, 15, 8, 9, 2, 3, 4, 5, 6, 7, 0, 1, 10, 11, 12, 13, 14, 15, 8, 9])).AsUInt64();
-    private static Vector256<ulong> rotr63(Vector256<ulong> x) => Avx2.Xor(Avx2.ShiftRightLogical(x, 63), Avx2.Add(x, x));
+    private static Vector256<ulong> Rotr32(Vector256<ulong> x) => Avx2.Shuffle(x.AsUInt32(), 0b_10_11_00_01).AsUInt64();
+    private static Vector256<ulong> Rotr24(Vector256<ulong> x) => Avx2.Shuffle(x.AsByte(), Vector256.Create<byte>([3, 4, 5, 6, 7, 0, 1, 2, 11, 12, 13, 14, 15, 8, 9, 10, 3, 4, 5, 6, 7, 0, 1, 2, 11, 12, 13, 14, 15, 8, 9, 10])).AsUInt64();
+    private static Vector256<ulong> Rotr16(Vector256<ulong> x) => Avx2.Shuffle(x.AsByte(), Vector256.Create<byte>([2, 3, 4, 5, 6, 7, 0, 1, 10, 11, 12, 13, 14, 15, 8, 9, 2, 3, 4, 5, 6, 7, 0, 1, 10, 11, 12, 13, 14, 15, 8, 9])).AsUInt64();
+    private static Vector256<ulong> Rotr63(Vector256<ulong> x) => Avx2.Xor(Avx2.ShiftRightLogical(x, 63), Avx2.Add(x, x));
 
     private static void G1(
         ref Vector256<ulong> A0,
@@ -26,25 +26,25 @@ public class BlamkaOpt
         ml = Avx2.Add(ml, ml);
         A0 = Avx2.Add(A0, Avx2.Add(B0, ml));
         D0 = Avx2.Xor(D0, A0);
-        D0 = rotr32(D0);
+        D0 = Rotr32(D0);
 
         ml = Avx2.Multiply(C0.AsUInt32(), D0.AsUInt32());
         ml = Avx2.Add(ml, ml);
         C0 = Avx2.Add(C0, Avx2.Add(D0, ml));
         B0 = Avx2.Xor(B0, C0);
-        B0 = rotr24(B0);
+        B0 = Rotr24(B0);
 
         ml = Avx2.Multiply(A1.AsUInt32(), B1.AsUInt32());
         ml = Avx2.Add(ml, ml);
         A1 = Avx2.Add(A1, Avx2.Add(B1, ml));
         D1 = Avx2.Xor(D1, A1);
-        D1 = rotr32(D1);
+        D1 = Rotr32(D1);
 
         ml = Avx2.Multiply(C1.AsUInt32(), D1.AsUInt32());
         ml = Avx2.Add(ml, ml);
         C1 = Avx2.Add(C1, Avx2.Add(D1, ml));
         B1 = Avx2.Xor(B1, C1);
-        B1 = rotr24(B1);
+        B1 = Rotr24(B1);
     }
 
     private static void G2(
@@ -62,25 +62,25 @@ public class BlamkaOpt
         ml = Avx2.Add(ml, ml);
         A0 = Avx2.Add(A0, Avx2.Add(B0, ml));
         D0 = Avx2.Xor(D0, A0);
-        D0 = rotr16(D0);
+        D0 = Rotr16(D0);
 
         ml = Avx2.Multiply(C0.AsUInt32(), D0.AsUInt32());
         ml = Avx2.Add(ml, ml);
         C0 = Avx2.Add(C0, Avx2.Add(D0, ml));
         B0 = Avx2.Xor(B0, C0);
-        B0 = rotr63(B0);
+        B0 = Rotr63(B0);
 
         ml = Avx2.Multiply(A1.AsUInt32(), B1.AsUInt32());
         ml = Avx2.Add(ml, ml);
         A1 = Avx2.Add(A1, Avx2.Add(B1, ml));
         D1 = Avx2.Xor(D1, A1);
-        D1 = rotr16(D1);
+        D1 = Rotr16(D1);
 
         ml = Avx2.Multiply(C1.AsUInt32(), D1.AsUInt32());
         ml = Avx2.Add(ml, ml);
         C1 = Avx2.Add(C1, Avx2.Add(D1, ml));
         B1 = Avx2.Xor(B1, C1);
-        B1 = rotr63(B1);
+        B1 = Rotr63(B1);
     }
 
     private static void Diagonalize1(

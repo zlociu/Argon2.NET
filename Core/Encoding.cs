@@ -1,6 +1,6 @@
 namespace Argon2.Core;
 
-using global::Argon2.Enums;
+using Enums;
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -26,12 +26,6 @@ using System.Text.RegularExpressions;
 /// </summary>
 public class Encoding
 {
-    private static string PadBase64(string input)
-    {
-        var len = input.Length & 3;
-        return input + (len switch { 3 => "=", 2 => "==", _ => "" });
-    }
-
     public static Argon2_ErrorCodes DecodeString(string str, Argon2Type type, Argon2Context ctx)
     {
         var result = Argon2Regex.Argon2Pattern().Match(str);
@@ -44,22 +38,22 @@ public class Encoding
         if (type != parsedType)
             return Argon2_ErrorCodes.ARGON2_DECODING_FAIL;
 
-        ctx.version = Argon2Version.ARGON2_VERSION_10; // default
+        ctx.Version = Argon2Version.ARGON2_VERSION_10; // default
 
         if (uint.TryParse(result.Groups["version"].Value, out uint ver))
-            ctx.version = (Argon2Version)ver;
+            ctx.Version = (Argon2Version)ver;
         
-        ctx.m_cost = uint.Parse(result.Groups["m_cost"].Value);
-        ctx.t_cost = uint.Parse(result.Groups["t_cost"].Value);
-        ctx.lanes = uint.Parse(result.Groups["lanes"].Value);
-        ctx.threads = ctx.lanes;
+        ctx.MCost = uint.Parse(result.Groups["m_cost"].Value);
+        ctx.TCost = uint.Parse(result.Groups["t_cost"].Value);
+        ctx.Lanes = uint.Parse(result.Groups["lanes"].Value);
+        ctx.Threads = ctx.Lanes;
 
-        ctx.salt = Convert.FromBase64String(PadBase64(result.Groups["salt"].Value));
-        ctx._out = Convert.FromBase64String(PadBase64(result.Groups["out"].Value));
+        ctx.Salt = Convert.FromBase64String(PadBase64(result.Groups["salt"].Value));
+        ctx.Out = Convert.FromBase64String(PadBase64(result.Groups["out"].Value));
 
-        ctx.secret = [];
-        ctx.ad = [];
-        ctx.flags = Consts.ARGON2_DEFAULT_FLAGS;
+        ctx.Secret = [];
+        ctx.Ad = [];
+        ctx.Flags = Consts.ARGON2_DEFAULT_FLAGS;
 
         /* On return, must have valid context */
         var validation_result = ctx.ValidateInputs();
@@ -79,22 +73,28 @@ public class Encoding
         sb.Append('$');
         sb.Append(type.Argon2Type2string(false));
         sb.Append("$v=");
-        sb.Append((uint)ctx.version);
+        sb.Append((uint)ctx.Version);
         sb.Append("$m=");
-        sb.Append(ctx.m_cost);
+        sb.Append(ctx.MCost);
         sb.Append(",t=");
-        sb.Append(ctx.t_cost);
+        sb.Append(ctx.TCost);
         sb.Append(",p=");
-        sb.Append(ctx.lanes);
+        sb.Append(ctx.Lanes);
 
         sb.Append('$');
-        sb.Append(Convert.ToBase64String(ctx.salt).TrimEnd('='));
+        sb.Append(Convert.ToBase64String(ctx.Salt).TrimEnd('='));
         sb.Append('$');
-        sb.Append(Convert.ToBase64String(ctx._out).TrimEnd('='));
+        sb.Append(Convert.ToBase64String(ctx.Out).TrimEnd('='));
 
         dst = sb.ToString();
 
         return Argon2_ErrorCodes.ARGON2_OK;
+    }
+
+    private static string PadBase64(string input)
+    {
+        var len = input.Length & 3;
+        return input + (len switch { 3 => "=", 2 => "==", _ => "" });
     }
 }
 

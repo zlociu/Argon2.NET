@@ -1,25 +1,19 @@
-using System;
-
 namespace Argon2.Blake2;
 
-public class Blake2b// : IBlake2b
+public class Blake2b
 {
-    public ulong[] h = new ulong[8];
-    public ulong[] t = new ulong[2];
-    public ulong[] f = new ulong[2];
-    public byte[] buf = new byte[Blake2Consts.BLAKE2B_BLOCKBYTES];
-    public uint buflen;
-    public uint outlen;
-    public byte last_node;
+    private readonly Blake2bState state = new();
 
-    private static readonly ulong[] blake2b_IV = {
+    private static readonly ulong[] blake2b_IV =
+    [
         0x6a09e667f3bcc908UL, 0xbb67ae8584caa73bUL,
         0x3c6ef372fe94f82bUL, 0xa54ff53a5f1d36f1UL,
         0x510e527fade682d1UL, 0x9b05688c2b3e6c1fUL,
         0x1f83d9abfb41bd6bUL, 0x5be0cd19137e2179UL
-    };
+    ];
 
-    private static readonly int[][] blake2b_sigma = {
+    private static readonly int[][] blake2b_sigma =
+    [
         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
         [14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3],
         [11, 8, 12, 0, 5, 2, 15, 13, 10, 14, 3, 6, 7, 1, 9, 4],
@@ -32,32 +26,32 @@ public class Blake2b// : IBlake2b
         [10, 2, 8, 4, 7, 6, 1, 5, 15, 11, 9, 14, 3, 12, 13, 0],
         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
         [14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3],
-    };
+    ];
 
-    private void blake2b_set_lastnode() {
-        this.f[1] = ulong.MaxValue;
+    private void Blake2bSetLastNode() {
+        this.state.f[1] = ulong.MaxValue;
     }
 
-    private void blake2b_set_lastblock() {
-        if (this.last_node > 0) {
-            blake2b_set_lastnode();
+    private void Blake2bSetLastBlock() {
+        if (this.state.lastNode > 0) {
+            Blake2bSetLastNode();
         }
     
-        this.f[0] = ulong.MaxValue;
+        this.state.f[0] = ulong.MaxValue;
     }
 
-    private void blake2b_increment_counter(ulong inc)
+    private void Blake2IncrementCounter(ulong inc)
     {
-        this.t[0] += inc;
-        this.t[1] += ((this.t[0] < inc) ? 1UL : 0UL);
+        this.state.t[0] += inc;
+        this.state.t[1] += (this.state.t[0] < inc) ? 1UL : 0UL;
     }
 
     private void blake2b_invalidate_state() {
-        blake2b_set_lastblock(); /* invalidate for further use */
+        Blake2bSetLastBlock(); /* invalidate for further use */
     }
 
     private void Blake2bInit() {
-        Array.Copy(blake2b_IV, this.h, 8);
+        Array.Copy(blake2b_IV, this.state.h, 8);
     }
     
     private int Blake2bInitParam(in Blake2bParam p)
@@ -72,10 +66,10 @@ public class Blake2b// : IBlake2b
         var serializedParams = p.SerializeToArray();
 
         for (int i = 0; i < 8; ++i) {
-            this.h[i] ^= serializedParams[i];
+            this.state.h[i] ^= serializedParams[i];
         }
         
-        this.outlen = p.digest_length;
+        this.state.outlen = p.digest_length;
         return 0;
     }
 
@@ -145,21 +139,21 @@ public class Blake2b// : IBlake2b
         int r;
 
         for (i = 0; i < 16; ++i) {
-            m[i] = Blake2Impl.load64(span.Slice(i * sizeof(ulong), sizeof(ulong)));
+            m[i] = BitConverter.ToUInt64(span.Slice(i * sizeof(ulong), sizeof(ulong)));
         }
 
         for (i = 0; i < 8; ++i) {
-            v[i] = this.h[i];
+            v[i] = this.state.h[i];
         }
 
         v[8] = blake2b_IV[0];
         v[9] = blake2b_IV[1];
         v[10] = blake2b_IV[2];
         v[11] = blake2b_IV[3];
-        v[12] = blake2b_IV[4] ^ this.t[0];
-        v[13] = blake2b_IV[5] ^ this.t[1];
-        v[14] = blake2b_IV[6] ^ this.f[0];
-        v[15] = blake2b_IV[7] ^ this.f[1];
+        v[12] = blake2b_IV[4] ^ this.state.t[0];
+        v[13] = blake2b_IV[5] ^ this.state.t[1];
+        v[14] = blake2b_IV[6] ^ this.state.f[0];
+        v[15] = blake2b_IV[7] ^ this.state.f[1];
 
         void G(int r, ulong i, ref ulong a, ref ulong b, ref ulong c, ref ulong d)                                                   
         {                                                                      
@@ -188,7 +182,7 @@ public class Blake2b// : IBlake2b
         for (r = 0; r < 12; ++r) Round(r);
 
         for (i = 0; i < 8; ++i)
-            this.h[i] = this.h[i] ^ v[i] ^ v[i + 8];
+            this.state.h[i] = this.state.h[i] ^ v[i] ^ v[i + 8];
     }
 
     public  int Blake2bUpdate(in byte[] _in)
@@ -198,32 +192,32 @@ public class Blake2b// : IBlake2b
         if (_in.Length == 0) return 0;
 
         /* Is this a reused state? */
-        if (this.f[0] != 0) return -1;
+        if (this.state.f[0] != 0) return -1;
         
         int inIdx = 0;
         int inLength = _in.Length;
         
-        if (this.buflen + inLength > Blake2Consts.BLAKE2B_BLOCKBYTES) {
+        if (this.state.buflen + inLength > Blake2Consts.BLAKE2B_BLOCKBYTES) {
             /* Complete current block */
-            int left = (int)this.buflen;
+            int left = (int)this.state.buflen;
             int fill = Blake2Consts.BLAKE2B_BLOCKBYTES - left;
-            Array.Copy(_in, inIdx, this.buf, left, fill);
-            blake2b_increment_counter(Blake2Consts.BLAKE2B_BLOCKBYTES);
-            Blake2bCompress(this.buf);
-            this.buflen = 0;
+            Array.Copy(_in, inIdx, this.state.buf, left, fill);
+            Blake2IncrementCounter(Blake2Consts.BLAKE2B_BLOCKBYTES);
+            Blake2bCompress(this.state.buf);
+            this.state.buflen = 0;
             inLength -= fill;
             inIdx += fill;
             /* Avoid buffer copies when possible */
             while (inLength > Blake2Consts.BLAKE2B_BLOCKBYTES) {
-                blake2b_increment_counter(Blake2Consts.BLAKE2B_BLOCKBYTES);
+                Blake2IncrementCounter(Blake2Consts.BLAKE2B_BLOCKBYTES);
                 Blake2bCompress(_in.AsSpan(inIdx, Blake2Consts.BLAKE2B_BLOCKBYTES));
                 inLength -= Blake2Consts.BLAKE2B_BLOCKBYTES;
                 inIdx += Blake2Consts.BLAKE2B_BLOCKBYTES;
             }
         }
         
-        Array.Copy(_in, inIdx, this.buf, this.buflen, inLength);
-        this.buflen += (uint)inLength;
+        Array.Copy(_in, inIdx, this.state.buf, this.state.buflen, inLength);
+        this.state.buflen += (uint)inLength;
         
         return 0;
     }
@@ -233,38 +227,38 @@ public class Blake2b// : IBlake2b
         uint i;
 
         /* Sanity checks */
-        if (_out is null || outlen < this.outlen) {
+        if (_out is null || outlen < this.state.outlen) {
             return -1;
         }
 
         /* Is this a reused state? */
-        if (this.f[0] != 0) {
+        if (this.state.f[0] != 0) {
             return -1;
         }
 
-        this.blake2b_increment_counter(this.buflen);
-        this.blake2b_set_lastblock();
+        this.Blake2IncrementCounter(this.state.buflen);
+        this.Blake2bSetLastBlock();
 
-        Array.Fill<byte>(this.buf, 0, (int)this.buflen, Blake2Consts.BLAKE2B_BLOCKBYTES - (int)this.buflen);
-        this.Blake2bCompress(this.buf);
+        Array.Fill<byte>(this.state.buf, 0, (int)this.state.buflen, Blake2Consts.BLAKE2B_BLOCKBYTES - (int)this.state.buflen);
+        this.Blake2bCompress(this.state.buf);
 
         for (i = 0; i < 8; ++i) { /* Output full hash to temp buffer */
-            var bytes = Blake2Impl.store64(this.h[i]);
+            var bytes = BitConverter.GetBytes(this.state.h[i]);
             Array.Copy(bytes, 0, buffer, sizeof(ulong) * i, sizeof(ulong)); 
         }
 
-        Array.Copy(buffer, _out, this.outlen);
+        Array.Copy(buffer, _out, this.state.outlen);
         return 0;
     }
     
-    private static int Blake2bInternal(byte[] _out, long outlen, in byte[] _in, long inlen, in byte[] key, long keylen)
+    private static int Blake2bInternal(byte[] _out, long outlen, in byte[] _in, in byte[] key, long keylen)
     {
         Blake2b state = new(); // has to be other instance
 
         int ret = -1;
 
         /* Verify parameters */
-        if (_in is null && inlen > 0) {
+        if (_in is null) {
             return ret;
         }
 
@@ -299,7 +293,7 @@ public class Blake2b// : IBlake2b
         }
 
         /* Ensure little-endian byte order! */
-        byte[] outlen_bytes = Blake2Impl.store32((uint)outlen);
+        byte[] outlen_bytes = BitConverter.GetBytes((uint)outlen);
 
         if (outlen <= Blake2Consts.BLAKE2B_OUTBYTES)
         {
@@ -334,7 +328,6 @@ public class Blake2b// : IBlake2b
                     out_buffer,
                     Blake2Consts.BLAKE2B_OUTBYTES,
                     in_buffer,
-                    Blake2Consts.BLAKE2B_OUTBYTES,
                     null,
                     0) < 0) return -1;
 
@@ -346,7 +339,7 @@ public class Blake2b// : IBlake2b
 
             Array.Copy(out_buffer, in_buffer, Blake2Consts.BLAKE2B_OUTBYTES);
             
-            if (Blake2bInternal(out_buffer, toproduce, in_buffer, Blake2Consts.BLAKE2B_OUTBYTES, null, 0) < 0) return -1;
+            if (Blake2bInternal(out_buffer, toproduce, in_buffer, null, 0) < 0) return -1;
 
             Array.Copy(out_buffer, 0, _out, outIdx, toproduce);
         }

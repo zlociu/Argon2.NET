@@ -11,17 +11,17 @@ public class Blake2Consts {
 
 public class Blake2bParam
 {
-    public byte digest_length;                                              //  1 
-    public byte key_length;                                                 //  2 
-    public byte fanout;                                                     //  3 
-    public byte depth;                                                      //  4 
-    public uint leaf_length;                                                //  8 
-    public ulong node_offset;                                               //  16
-    public byte node_depth;                                                 //  17
-    public byte inner_length;                                               //  18
-    public byte[] reserved = new byte[14];                                  //  32
-    public byte[] salt = new byte[Blake2Consts.BLAKE2B_SALTBYTES];            //  48
-    public byte[] personal = new byte[Blake2Consts.BLAKE2B_PERSONALBYTES];    //  64
+    internal byte digest_length;                                              //  1 
+    internal byte key_length;                                                 //  2 
+    internal byte fanout;                                                     //  3 
+    internal byte depth;                                                      //  4 
+    internal uint leaf_length;                                                //  8 
+    internal ulong node_offset;                                               //  16
+    internal byte node_depth;                                                 //  17
+    internal byte inner_length;                                               //  18
+    internal byte[] reserved = new byte[14];                                  //  32
+    internal byte[] salt = new byte[Blake2Consts.BLAKE2B_SALTBYTES];            //  48
+    internal byte[] personal = new byte[Blake2Consts.BLAKE2B_PERSONALBYTES];    //  64
 
     public ulong[] SerializeToArray()
     {
@@ -91,20 +91,5 @@ public class Blake2bState
     public byte[] buf = new byte[Blake2Consts.BLAKE2B_BLOCKBYTES];
     public uint buflen;
     public uint outlen;
-    public byte last_node;
-}
-
-public interface IBlake2b
-{
-    int Blake2bInit(Blake2bState S, long outlen);
-    int Blake2bInit_key(Blake2bState S, long outlen,  byte[] key,
-        long keylen);
-    int Blake2bInitParam(Blake2bState S,  Blake2bParam P);
-    int Blake2bUpdate(Blake2bState S,  byte[] _in, long inlen);
-    int Blake2bFinal(Blake2bState S, byte[] _out, long outlen);
-
-    int blake2b(byte[] _out, long outlen,  byte[] _in, long inlen,
-                          byte[]  key, long keylen);
-
-    int Blake2bLong(byte[] _out, long outlen,  byte[] _in, long inlen);
+    public byte lastNode;
 }

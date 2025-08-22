@@ -18,26 +18,24 @@ Base64-encoded hash string
 @raw_only display only the hexadecimal of the hash
 @version Argon2 version
 */
-void Run(int outlen, string pwd, long pwdlen, string salt, uint t_cost,
-                uint m_cost, uint lanes, uint threads,
-                Argon2Type type, bool encoded_only, bool raw_only, Argon2Version version)
+void Run(
+    int outlen, 
+    string pwd,
+    string salt,
+    uint t_cost,
+    uint m_cost,
+    uint threads,
+    Argon2Type type,
+    bool encoded_only,
+    bool raw_only,
+    Argon2Version version)
 {
-    Stopwatch s1 = new();
-
     Argon2_ErrorCodes result;
-    string encoded;
+    Stopwatch s1 = Stopwatch.StartNew();
 
-    s1.Start();
+    if (pwd is null) throw new Exception("password missing");
 
-    if (pwd is null)
-    {
-        throw new Exception("password missing");
-    }
-
-    if (salt is null)
-    {
-        throw new Exception("salt missing");
-    }
+    if (salt is null) throw new Exception("salt missing");
     
     result = Argon2.Core.Argon2.Argon2Hash(
         t_cost,
@@ -54,19 +52,19 @@ void Run(int outlen, string pwd, long pwdlen, string salt, uint t_cost,
 
     s1.Stop();
 
-    Encoding.EncodeString(context, type, out encoded);
+    Encoding.EncodeString(context, type, out string encoded);
 
     if (encoded_only)
         Console.WriteLine(encoded);
 
     if (raw_only)
-        Helpers.PrintHex(context._out);
+        Helpers.PrintHex(context.Out);
 
     if (encoded_only || raw_only)
         return;
 
     Console.Write("Hash:\t\t");
-    Helpers.PrintHex(context._out);
+    Helpers.PrintHex(context.Out);
 
     Console.Write("Encoded:\t{0}\n", encoded);
 
@@ -82,7 +80,6 @@ void Run(int outlen, string pwd, long pwdlen, string salt, uint t_cost,
 int outlen = 32;
 uint m_cost = 1 << 12;
 uint t_cost = 3;
-uint lanes = 1;
 uint threads = 1;
 Argon2Type type = Argon2Type.I; /* Argon2i is the default type */
 bool m_cost_specified = false;
@@ -208,7 +205,7 @@ for (i = 1; i < args.Length; i++)
             {
                 Console.WriteLine("bad numeric input for -p");
             }
-            threads = lanes = (uint)pInt;
+            threads = (uint)pInt;
             continue;
         }
         else
@@ -285,9 +282,9 @@ if (!encoded_only && !raw_only)
     Console.Write("Type:\t\t{0}\n", type.Argon2Type2string(true));
     Console.Write("Iterations:\t{0}\n", t_cost);
     Console.Write("Memory:\t\t{0} KiB\n", m_cost);
-    Console.Write("Parallelism:\t{0}\n", lanes);
+    Console.Write("Parallelism:\t{0}\n", threads);
 }
 
-Run(outlen, pwd, pwd.Length, salt, t_cost, m_cost, lanes, threads, type, encoded_only, raw_only, version);
+Run(outlen, pwd, salt, t_cost, m_cost, threads, type, encoded_only, raw_only, version);
 
 return 0;
